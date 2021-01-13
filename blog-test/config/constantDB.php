@@ -1,5 +1,6 @@
 <?php
+
 const DB_HOST = 'localhost';
-const DB_USER = 'venia7ve_david';
-const DB_PASSWORD = 'jDIJklGr';
-const DB_NAME = 'venia7ve_blog';
+const DB_USER = 'root';
+const DB_PASSWORD = 'cdbynec7';
+const DB_NAME = 'blog';

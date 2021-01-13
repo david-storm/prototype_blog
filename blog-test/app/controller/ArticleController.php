@@ -4,29 +4,25 @@ namespace controller;
 
 use core\Auth;
 use core\Application;
+use core\Messenger;
+use core\Router;
 use model\Article;
 use model\Comment;
 use model\Tags;
 
 class ArticleController {
 	
-	protected $article;
-	protected $tag;
-	
-	public function __construct() {
-		$this->article = new Article();
-		$this->tag = new Tags();
-	}
-	
 	public function front() {
-		$articles = $this->article->viewAll();
+		
+		$articles = (new Article())->viewAll();
 		return ['template' => 'main', 'articles' => $articles];
 	}
 	
-	public function page($index) {
-		$article = $this->article->get($index);
+	public function page(int $index) {
+		
+		$article = (new Article())->get($index);
 		$comments = (new Comment())->get($index);
-		$article['tags'] = str_replace(',', ' ',  $article['tags']);
+		
 		return ['template' => 'page', 'article' => $article, 'comments' => $comments];
 	}
 	
@@ -34,56 +30,63 @@ class ArticleController {
 		
 		$auth = new Auth();
 		if ($auth->isAdmin() === false) {
+			
 			$auth->authenticate();
 		}
-		$articles = $this->article->viewAll(50, TRUE);
+		$articles = (new Article())->viewAll(50, TRUE);
 		
 		return ['template' => 'admin/main', 'articles' => $articles];
 	}
 	
-	public function create($data = []) {
+	public function create(array $data = []) {
 		
 		if (empty($data)) {
+			
 			return ['template' => 'admin/create'];
 		}
 		
-		$index = $this->article->create($data);
-		$this->tag->syncTags($data['tags'], $index);
+		$article = new Article();
+		
+		
+		$index = $article->create($data);
 		
 		if ($index > 0) {
-			Application::getMessage('article success created');
+			(new Tags())->syncTags($data['tags'], $index);
+			Messenger::add('article success created');
 		} else {
-			Application::getMessage('Error, try again', 'error');
+			Messenger::add('Error, try again', 'error');
 		}
 		
-		Application::redirect('/admin');
+		Router::redirect('/admin');
 	}
 	
 	public function edit($index, $data = []) {
 		
 		if (empty($data)) {
-			$article = $this->article->get($index);
+			$article = (new Article())->get($index);
 			$article['id'] = $index;
 			return ['template' => 'admin/edit', 'article' => $article];
 		}
 		
 		$res = TRUE;
 		
-		$article = $this->article->get($index);
-		if($article['title'] !== $data['title'] ||
+		$article = (new Article())->get($index);
+		
+		if ($article['title'] !== $data['title'] ||
 			$article['content'] !== $data['content'] ||
 			$article['status'] !== $data['status']) {
-			$res = $this->article->update($index, $data);
+			
+			$res = (new Article())->update($index, $data);
 		}
 		
 		if ($article['tags'] !== $data['tags']) {
-			$this->tag->syncTags($data['tags'], $index);
+			(new Tags())->syncTags($data['tags'], $index);
 		}
 		
 		if ($res) {
-			Application::getMessage('article success update');
+			Application::add('article success update');
 		} else {
-			Application::getMessage('Error, try again', 'error');
+			Application::add('Error, try again', 'error');
 		}
 		
 		Application::redirect('/admin');
@@ -91,7 +94,7 @@ class ArticleController {
 	
 	public function delete($index) {
 		
-		$res = $this->article->delete($index);
+		$res = (new Article())->delete($index);
 		
 		if ($res) {
 			Application::getMessage('article success deleted');
@@ -101,5 +104,7 @@ class ArticleController {
 		
 		Application::redirect('/admin');
 	}
+	
+//	protected function end
 	
 }

@@ -8,7 +8,7 @@ use core\Mysql as sql;
 
 class Image {
 	
-	private $uploadDir = 'storage' ;
+	protected $uploadDir = 'storage' ;
 	
 	
 	public function create($index) {
