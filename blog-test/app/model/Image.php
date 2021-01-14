@@ -1,31 +1,32 @@
 <?php
 
+
 namespace model;
 
-use core\Application;
-use \core\ModelCRUD as model;
+use core\Messenger;
 use core\Mysql as sql;
+
 
 class Image {
 	
 	protected $uploadDir = 'storage' ;
 	
-	
 	public function create($index) {
 		
-		$name = basename($_FILES['image']['name']);
-		$filePath = $this->uploadDir . DIRECTORY_SEPARATOR. $name;
-		
-		if (!move_uploaded_file($_FILES['image']['tmp_name'], $filePath)) {
-			Application::getMessage('Image not load', 'error');
-			return FALSE;
-		}
-		
-		sql::db_query('INSERT INTO `images` (`name`, `id_comment`)
+		for ($i = 0; $i < count($_FILES['image']['name']); $i++){
+			$name = basename($_FILES['image']['name'][$i]);
+			$filePath = $this->uploadDir . DIRECTORY_SEPARATOR. $name;
+			
+			if (!move_uploaded_file($_FILES['image']['tmp_name'][$i], $filePath)) {
+				Messenger::add("Image $name not load", 'error');
+				continue;
+			}
+			
+			sql::db_query('INSERT INTO `images` (`name`, `id_comment`)
 			VALUES (:name, :index)',
-			[':name' => $name, ':index' => $index]);
-		
-		return sql::db_lastID();
+				[':name' => $name, ':index' => $index]);
+			
+		}
 	}
 	
 	public function get($index) {
@@ -37,4 +38,5 @@ class Image {
 		}
 		return $images;
 	}
+	
 }

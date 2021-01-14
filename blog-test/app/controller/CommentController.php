@@ -1,52 +1,32 @@
 <?php
 
+
 namespace controller;
 
-use core\Application;
+use core\Messenger;
+use core\Router;
+use model\Comment;
+use model\Image;
+use validator\CommentValidator;
+
 
 class CommentController {
 	
-	protected $comment;
-	protected $image;
-	
-	public function __construct() {
-		$this->comment = new \model\Comment();
-		$this->image = new \model\Image();
-	}
-	
-	public function add($aid, $data) {
+	public function add($id, $data) {
 		
-		if($this->valid($data)){
-			if($id_comment = $this->comment->create($data + ['id' => $aid])){
-				$this->image->create($id_comment);
-				Application::getMessage('New comment added');
+		if (!CommentValidator::validation($data)) {
+			Router::redirect('/article/' . $id);
+		}
+		
+		if ($id_comment = (new Comment())->create($data + ['id' => $id])) {
+			
+			if (($_FILES['image']['error'] ?? 0) !== UPLOAD_ERR_NO_FILE) {
+				(new Image())->create($id_comment);
 			}
+			Messenger::add('New comment added');
 		}
 		
-		Application::redirect('/article/' . $aid);
+		Router::redirect('/article/' . $id);
 	}
 	
-	protected function valid(&$data) {
-		
-		if(empty($data['email']) || empty($data['content']) ){
-			Application::getMessage('empty filed', 'error');
-			return false;
-		}
-		foreach ($data as $key => &$value){
-			$value = trim($value);
-			$value = htmlspecialchars($value);
-		}
-		
-		if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
-			Application::getMessage('E-mail not valid', 'error');
-			return false;
-		}
-		
-		if(mb_strlen($data['content']) < 20){
-			Application::getMessage('Content must be longer than 20 characters', 'error');
-			return false;
-		}
-		
-		return true;
-	}
 }

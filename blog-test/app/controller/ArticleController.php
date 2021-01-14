@@ -3,12 +3,13 @@
 namespace controller;
 
 use core\Auth;
-use core\Application;
 use core\Messenger;
 use core\Router;
 use model\Article;
 use model\Comment;
 use model\Tags;
+use validator\ArticleValidator;
+
 
 class ArticleController {
 	
@@ -29,28 +30,32 @@ class ArticleController {
 	public function admin() {
 		
 		$auth = new Auth();
+		
 		if ($auth->isAdmin() === false) {
-			
 			$auth->authenticate();
 		}
-		$articles = (new Article())->viewAll(50, TRUE);
 		
+		$articles = (new Article())->viewAll(50, TRUE);
 		return ['template' => 'admin/main', 'articles' => $articles];
 	}
 	
 	public function create(array $data = []) {
 		
+		$action = ['action' => 'admin/create', 'operation' => 'Create'];
+		
 		if (empty($data)) {
-			
-			return ['template' => 'admin/create'];
+			return ['template' => 'admin/create'] + $action;
+		}
+		
+		if (!ArticleValidator::validation($data)) {
+			return ['template' => 'admin/create', 'article' => $data] + $action;
 		}
 		
 		$article = new Article();
-		
-		
 		$index = $article->create($data);
 		
 		if ($index > 0) {
+			
 			(new Tags())->syncTags($data['tags'], $index);
 			Messenger::add('article success created');
 		} else {
@@ -58,14 +63,18 @@ class ArticleController {
 		}
 		
 		Router::redirect('/admin');
+		return '';
 	}
 	
 	public function edit($index, $data = []) {
 		
+		$action = ['action' => 'admin/edit/' . $index, 'operation' => 'Update'];
+		
 		if (empty($data)) {
+			
 			$article = (new Article())->get($index);
 			$article['id'] = $index;
-			return ['template' => 'admin/edit', 'article' => $article];
+			return ['template' => 'admin/create', 'article' => $article] + $action;
 		}
 		
 		$res = TRUE;
@@ -84,27 +93,27 @@ class ArticleController {
 		}
 		
 		if ($res) {
-			Application::add('article success update');
+			Messenger::add('Article success update');
 		} else {
-			Application::add('Error, try again', 'error');
+			Messenger::add('Error, try again', 'error');
 		}
 		
-		Application::redirect('/admin');
+		Router::redirect('/admin');
+		return '';
 	}
 	
 	public function delete($index) {
 		
 		$res = (new Article())->delete($index);
+		(new Tags())->syncTags([], $index);
 		
 		if ($res) {
-			Application::getMessage('article success deleted');
+			Messenger::add('article success deleted');
 		} else {
-			Application::getMessage('Error, try again', 'error');
+			Messenger::add('Error, try again', 'error');
 		}
 		
-		Application::redirect('/admin');
+		Router::redirect('/admin');
 	}
-	
-//	protected function end
 	
 }

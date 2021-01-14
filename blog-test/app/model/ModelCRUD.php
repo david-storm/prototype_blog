@@ -13,5 +13,5 @@ interface ModelCRUD {
 	public function update($index, $data);
 	
 	public function delete($index);
-
+	
 }

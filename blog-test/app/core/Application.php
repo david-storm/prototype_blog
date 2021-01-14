@@ -13,6 +13,7 @@ class Application {
 	protected $router;
 	
 	public function __construct() {
+		
 		session_start();
 		$this->router = new Router();
 	}
@@ -52,7 +53,6 @@ class Application {
 		
 		/* can bu used render with template */
 		if (!isset($data['template'])) {
-			
 			$content = $data;
 		} else {
 			
@@ -63,6 +63,7 @@ class Application {
 			if (!file_exists($templatePath)) {
 				$this->error(501, 'Something happened, please try again later');
 			}
+			
 			ob_start();
 			require_once $templatePath;
 			$content = ob_get_clean();

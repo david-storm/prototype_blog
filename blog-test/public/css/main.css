@@ -174,11 +174,12 @@ input[type='submit'] {
 
 .image-wrapper{
   display: inline-block;
-  width: 50%;
-  max-height: 250px;
 }
 .image-wrapper img{
-  max-width: 100%;
+  width: 100px;
+}
+.image-wrapper-global{
+  display: flex;
 }
 /* message */
 .message{

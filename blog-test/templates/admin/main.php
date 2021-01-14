@@ -17,7 +17,7 @@
 		<?php foreach ($data['articles'] as $key => $article) { ?>
 			<tr class="<?= $key % 2 === 0 ? 'odd' : 'even'?>">
 				<td><?=$article['id']?></td>
-				<td><?=$article['title']?></td>
+				<td><?=htmlspecialchars($article['title'])?></td>
 				<td><?=$article['status']?></td>
 				<td><?= date('Y-m-d H:i', $article['time_created'])?></td>
 				<td><a href="admin/edit/<?=$article['id']?>">edit</a></td>
